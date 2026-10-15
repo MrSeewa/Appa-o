@@ -27,10 +27,10 @@ public class Usuario {
     @Column 
     private String nombre;
 
-    @Column 
+    @Column(nullable = false, unique = true, length = 50)
     private String apodo;
 
-    @Column 
+    @Column(nullable = false, unique = true, length = 100)
     private String correo;
 
     //se guardará el hash cifrado jojo

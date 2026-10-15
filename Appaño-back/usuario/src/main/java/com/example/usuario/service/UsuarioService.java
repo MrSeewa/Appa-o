@@ -1,6 +1,5 @@
 package com.example.usuario.service;
 
-import com.example.usuario.UsuarioApplication;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,29 +7,34 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.usuario.dto.request.UsuarioRegistroReq;
+import com.example.usuario.dto.response.UsuarioRes;
 import com.example.usuario.models.entities.Usuario;
+import com.example.usuario.models.enums.RolUsuario;
 import com.example.usuario.repository.UsuarioRepository;
 
 @Service
 public class UsuarioService {
 
-    
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    public List<Usuario> obtenerTodosLosUsuarios() {
-        return usuarioRepository.findAll();
+    public List<UsuarioRes> obtenerTodosLosUsuarios() {
+        return usuarioRepository.findAll()
+                .stream()
+                .map(UsuarioRes::fromEntity)
+                .toList();
     }
 
-    public Usuario obtenerUsuariosPorId(Long id_usuario) {
+    public UsuarioRes obtenerUsuariosPorId(Long id_usuario) {
         Usuario usuario = usuarioRepository.findById(id_usuario).orElse(null);
-        if (usuario == null){
+        if (usuario == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado con esa id");
         }
-        return usuario;
+        return UsuarioRes.fromEntity(usuario);
     }
 
-    public Usuario agregarUsuario(Usuario nuevoUsuario){
+    public UsuarioRes agregarUsuario(UsuarioRegistroReq nuevoUsuario) {
         Usuario usuario = new Usuario();
         usuario.setNombre(nuevoUsuario.getNombre());
         usuario.setApodo(nuevoUsuario.getApodo());
@@ -38,13 +42,14 @@ public class UsuarioService {
         usuario.setPassword(nuevoUsuario.getPassword());
         usuario.setFotoPerfil(nuevoUsuario.getFotoPerfil());
         usuario.setBiografia(nuevoUsuario.getBiografia());
-        usuario.setRol(nuevoUsuario.getRol());
+        usuario.setRol(nuevoUsuario.getRol() != null ? nuevoUsuario.getRol() : RolUsuario.USER);
 
-        return usuarioRepository.save(usuario);
+        Usuario usuarioGuardado = usuarioRepository.save(usuario);
+        return UsuarioRes.fromEntity(usuarioGuardado);
     }
 
-    public String eliminarusuario(Long id_usuario){
-        if (usuarioRepository.existsById(id_usuario)){
+    public String eliminarusuario(Long id_usuario) {
+        if (usuarioRepository.existsById(id_usuario)) {
             usuarioRepository.deleteById(id_usuario);
             return "Usuario eliminado correctamente";
         } else {
@@ -52,20 +57,24 @@ public class UsuarioService {
         }
     }
 
-    public Usuario actualizarUsuario(Usuario nuevoUsuario){
-        Usuario usuario = usuarioRepository.findById(nuevoUsuario.getId_usuario()).orElse(null);
-        if (usuario == null){
+    public UsuarioRes actualizarUsuario(Long id_usuario, UsuarioRegistroReq datosActualizar) {
+        Usuario usuario = usuarioRepository.findById(id_usuario).orElse(null);
+        if (usuario == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado con esa id");
         }
-        usuario.setNombre(nuevoUsuario.getNombre());
-        usuario.setApodo(nuevoUsuario.getApodo());
-        usuario.setCorreo(nuevoUsuario.getCorreo());
-        usuario.setPassword(nuevoUsuario.getPassword());
-        usuario.setFotoPerfil(nuevoUsuario.getFotoPerfil());
-        usuario.setBiografia(nuevoUsuario.getBiografia());
-        usuario.setRol(nuevoUsuario.getRol());
+        usuario.setNombre(datosActualizar.getNombre());
+        usuario.setApodo(datosActualizar.getApodo());
+        usuario.setCorreo(datosActualizar.getCorreo());
+        if (datosActualizar.getPassword() != null && !datosActualizar.getPassword().isBlank()) {
+            usuario.setPassword(datosActualizar.getPassword());
+        }
+        usuario.setFotoPerfil(datosActualizar.getFotoPerfil());
+        usuario.setBiografia(datosActualizar.getBiografia());
+        if (datosActualizar.getRol() != null) {
+            usuario.setRol(datosActualizar.getRol());
+        }
 
-        return usuarioRepository.save(usuario);
+        Usuario usuarioActualizado = usuarioRepository.save(usuario);
+        return UsuarioRes.fromEntity(usuarioActualizado);
     }
-
 }

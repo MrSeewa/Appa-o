@@ -1,0 +1,105 @@
+### Variables de entorno
+@baseUrl = http://localhost:8080/usuarios
+
+###############################################################################
+# 1. CREAR USUARIO (Éxito - 201 Created)
+###############################################################################
+# @name crearUsuario
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "nombre": "Sebastian Osorio",
+  "apodo": "sewa_21",
+  "correo": "sebastian@example.com",
+  "password": "password123",
+  "fotoPerfil": "https://avatar.iran.liara.run/public/boy?username=sewa",
+  "biografia": "Desarrollador apasionado por Spring Boot y React.",
+  "rol": "USER"
+}
+
+###
+
+###############################################################################
+# 2. OBTENER TODOS LOS USUARIOS (200 OK)
+###############################################################################
+GET {{baseUrl}}
+Accept: application/json
+
+###
+
+###############################################################################
+# 3. OBTENER USUARIO POR ID (200 OK)
+###############################################################################
+GET {{baseUrl}}/1
+Accept: application/json
+
+###
+
+###############################################################################
+# 4. ACTUALIZAR USUARIO (200 OK)
+###############################################################################
+PUT {{baseUrl}}/1
+Content-Type: application/json
+
+{
+  "nombre": "Sebastian Osorio Actualizado",
+  "apodo": "sewa_21",
+  "correo": "sebastian@example.com",
+  "password": "nuevaPassword123",
+  "fotoPerfil": "https://avatar.iran.liara.run/public/boy?username=sewa_updated",
+  "biografia": "Biografía actualizada con nueva información.",
+  "rol": "ADMIN"
+}
+
+###
+
+###############################################################################
+# 5. TEST VALIDACIÓN FALLIDA - Apodo inválido, email incorrecto y pass corta (400 Bad Request)
+###############################################################################
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "nombre": "",
+  "apodo": "a b!*",
+  "correo": "correo-invalido",
+  "password": "123",
+  "fotoPerfil": "",
+  "biografia": "Test de error",
+  "rol": "USER"
+}
+
+###
+
+###############################################################################
+# 6. TEST INTEGRIDAD DUPLICADA - Intento de registrar mismo correo/apodo (400 Bad Request)
+###############################################################################
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "nombre": "Otro Usuario",
+  "apodo": "sewa_21",
+  "correo": "sebastian@example.com",
+  "password": "password123",
+  "fotoPerfil": "",
+  "biografia": "Intento de registro duplicado",
+  "rol": "USER"
+}
+
+###
+
+###############################################################################
+# 7. TEST USUARIO NO ENCONTRADO (404 Not Found)
+###############################################################################
+GET {{baseUrl}}/9999
+Accept: application/json
+
+###
+
+###############################################################################
+# 8. ELIMINAR USUARIO (200 OK)
+###############################################################################
+DELETE {{baseUrl}}/1
+
