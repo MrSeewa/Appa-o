@@ -5,15 +5,9 @@ import java.time.LocalDateTime;
 import com.example.usuario.models.entities.Usuario;
 import com.example.usuario.models.enums.RolUsuario;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class UsuarioRes {
 
     private Long id_usuario;
@@ -30,17 +24,16 @@ public class UsuarioRes {
         if (usuario == null) {
             return null;
         }
-        return UsuarioRes.builder()
-                .id_usuario(usuario.getId_usuario())
-                .id(usuario.getId_usuario())
-                .nombre(usuario.getNombre())
-                .apodo(usuario.getApodo())
-                .correo(usuario.getCorreo())
-                .fotoPerfil(usuario.getFotoPerfil())
-                .biografia(usuario.getBiografia())
-                .rol(usuario.getRol())
-                .fechaRegistro(usuario.getFechaRegistro())
-                .build();
+        UsuarioRes res = new UsuarioRes();
+        res.setId_usuario(usuario.getId_usuario());
+        res.setId(usuario.getId_usuario());
+        res.setNombre(usuario.getNombre());
+        res.setApodo(usuario.getApodo());
+        res.setCorreo(usuario.getCorreo());
+        res.setFotoPerfil(usuario.getFotoPerfil());
+        res.setBiografia(usuario.getBiografia());
+        res.setRol(usuario.getRol());
+        res.setFechaRegistro(usuario.getFechaRegistro());
+        return res;
     }
 }
-

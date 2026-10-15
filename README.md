@@ -1,2 +1,2 @@
-# Appa-o
-proyecto personal de dudoso exito
+# Yo_Appaño
+proyecto personal de dudoso exito u utilidad

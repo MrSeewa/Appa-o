@@ -9,12 +9,12 @@ POST {{baseUrl}}
 Content-Type: application/json
 
 {
-  "nombre": "Sebastian Osorio",
-  "apodo": "sewa_21",
-  "correo": "sebastian@example.com",
+  "nombre": "Robert House",
+  "apodo": "Mr_house",
+  "correo": "robert@example.com",
   "password": "password123",
-  "fotoPerfil": "https://avatar.iran.liara.run/public/boy?username=sewa",
-  "biografia": "Desarrollador apasionado por Spring Boot y React.",
+  "fotoPerfil": "https://avatar.iran.liara.run/public/boy?username=robert",
+  "biografia": "Dueño de new Vegas y empresario exitoso.",
   "rol": "USER"
 }
 

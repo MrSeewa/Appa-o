@@ -1,0 +1,60 @@
+### Variables de entorno
+@baseUrl = http://localhost:8081/api/eventos
+
+###############################################################################
+# 1. CREAR EVENTO (POST /api/eventos)
+# Requiere que el microservicio de usuarios (puerto 8080) esté corriendo y tenga el usuario con ID 1
+###############################################################################
+# @name crearEvento
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "titulo": "Pichanga de Fin de Semana",
+  "descripcion": "Partido amistoso de fútbol 7 en las canchas de San Joaquín. Traer polera blanca o negra.",
+  "categoria": "Deportes",
+  "fechaEvento": "2026-12-01T18:00:00",
+  "creadorId": 3
+}
+
+###
+
+###############################################################################
+# 2. LISTAR TODOS LOS EVENTOS (GET /api/eventos)
+###############################################################################
+GET {{baseUrl}}
+Accept: application/json
+
+###
+
+###############################################################################
+# 3. OBTENER DETALLE DEL EVENTO (GET /api/eventos/{id})
+# Muestra datos del evento + datos del creador (vía Feign) + cantidadInscritos (0 inicialmente)
+###############################################################################
+GET {{baseUrl}}/1
+Accept: application/json
+
+###
+
+###############################################################################
+# 4. INSCRIBIR USUARIO A UN EVENTO (POST /api/eventos/{id}/inscribir?usuarioId=1)
+###############################################################################
+POST {{baseUrl}}/1/inscribir?usuarioId=4
+Accept: application/json
+
+###
+
+###############################################################################
+# 5. TEST INSCRIPCIÓN DUPLICADA (Debe fallar si ya está inscrito)
+###############################################################################
+POST {{baseUrl}}/1/inscribir?usuarioId=1
+Accept: application/json
+
+###
+
+###############################################################################
+# 6. VERIFICAR CONTADOR TRAS LA INSCRIPCIÓN (GET /api/eventos/1)
+# Ahora "cantidadInscritos" debería reflejar 1
+###############################################################################
+GET {{baseUrl}}/1
+Accept: application/json
