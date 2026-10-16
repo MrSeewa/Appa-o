@@ -10,6 +10,9 @@ import lombok.Data;
 @Data
 public class UsuarioRes {
 
+    public UsuarioRes() {
+    }
+
     private Long id_usuario;
     private Long id;
     private String nombre;

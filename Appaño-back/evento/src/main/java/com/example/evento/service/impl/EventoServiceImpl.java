@@ -2,7 +2,9 @@ package com.example.evento.service.impl;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.example.evento.client.UsuarioClient;
 import com.example.evento.model.entities.Evento;
@@ -32,10 +34,10 @@ public class EventoServiceImpl implements EventoService {
     @Override
     public void inscribirUsuario(Long eventoId, Long usuarioId) {
         Evento evento = eventoRepository.findById(eventoId)
-                .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
 
         if (inscripcionRepository.existsByEventoAndUsuarioId(evento, usuarioId)) {
-            throw new RuntimeException("El usuario ya está inscrito en este evento");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "El usuario ya está inscrito en este evento");
         }
 
         Inscripcion nuevaInscripcion = Inscripcion.builder()
@@ -49,7 +51,7 @@ public class EventoServiceImpl implements EventoService {
     @Override
     public EventoDetalleRes obtenerDetalleEvento(Long eventoId) {
         Evento evento = eventoRepository.findById(eventoId)
-                .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
 
         return construirDetalleEvento(evento);
     }
@@ -60,11 +62,11 @@ public class EventoServiceImpl implements EventoService {
         try {
             creador = usuarioClient.obtenerPerfilCreador(request.getCreadorId());
         } catch (Exception e) {
-            throw new RuntimeException("No se pudo verificar el creador: usuario no encontrado en el microservicio de usuarios");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se pudo verificar el creador: usuario no encontrado en el microservicio de usuarios");
         }
 
         if (creador == null) {
-            throw new RuntimeException("El usuario creador no existe");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El usuario creador no existe");
         }
 
         Evento evento = new Evento();

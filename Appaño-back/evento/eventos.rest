@@ -54,7 +54,6 @@ Accept: application/json
 
 ###############################################################################
 # 6. VERIFICAR CONTADOR TRAS LA INSCRIPCIÓN (GET /api/eventos/1)
-# Ahora "cantidadInscritos" debería reflejar 1
 ###############################################################################
 GET {{baseUrl}}/1
 Accept: application/json

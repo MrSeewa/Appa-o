@@ -11,6 +11,9 @@ import lombok.Data;
 @Data
 public class EventoRegistroReq {
 
+    public EventoRegistroReq() {
+    }
+
     @NotBlank(message = "El título es obligatorio")
     @Size(max = 150, message = "El título no puede superar los 150 caracteres")
     private String titulo;

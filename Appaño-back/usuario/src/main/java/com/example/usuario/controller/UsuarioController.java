@@ -21,7 +21,7 @@ import com.example.usuario.service.UsuarioService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/usuarios")
+@RequestMapping({"/usuarios", "/api/usuarios"})
 public class UsuarioController {
 
     @Autowired

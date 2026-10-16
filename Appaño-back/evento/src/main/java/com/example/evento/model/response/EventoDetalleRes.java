@@ -7,6 +7,9 @@ import lombok.Data;
 @Data
 public class EventoDetalleRes {
 
+    public EventoDetalleRes() {
+    }
+
     private Long id;
     private String titulo;
     private String descripcion;

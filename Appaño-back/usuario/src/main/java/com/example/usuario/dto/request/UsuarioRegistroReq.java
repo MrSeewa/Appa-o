@@ -1,6 +1,8 @@
 package com.example.usuario.dto.request;
 
 import com.example.usuario.models.enums.RolUsuario;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,10 +11,16 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UsuarioRegistroReq {
+
+    public UsuarioRegistroReq() {
+    }
 
     @NotBlank(message = "El nombre no puede estar vacío")
     private String nombre;
+
+    private String apellido;
 
     @NotBlank(message = "El apodo no puede estar vacío")
     @Pattern(
@@ -23,6 +31,7 @@ public class UsuarioRegistroReq {
 
     @NotBlank(message = "El correo no puede estar vacío")
     @Email(message = "Debe ingresar un formato de correo electrónico válido")
+    @JsonAlias({"email", "correo"})
     private String correo;
 
     @NotBlank(message = "La contraseña no puede estar vacía")

@@ -36,7 +36,11 @@ public class UsuarioService {
 
     public UsuarioRes agregarUsuario(UsuarioRegistroReq nuevoUsuario) {
         Usuario usuario = new Usuario();
-        usuario.setNombre(nuevoUsuario.getNombre());
+        String nombre = nuevoUsuario.getNombre();
+        if (nuevoUsuario.getApellido() != null && !nuevoUsuario.getApellido().isBlank()) {
+            nombre = (nombre != null ? nombre + " " : "") + nuevoUsuario.getApellido().trim();
+        }
+        usuario.setNombre(nombre);
         usuario.setApodo(nuevoUsuario.getApodo());
         usuario.setCorreo(nuevoUsuario.getCorreo());
         usuario.setPassword(nuevoUsuario.getPassword());
