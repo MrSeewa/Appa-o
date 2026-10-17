@@ -1,0 +1,60 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+export const Navbar = () => {
+  const { usuarioActual, usuariosDisponibles, cambiarUsuario } = useAuth();
+  const location = useLocation();
+
+  return (
+    <nav className="navbar">
+      <div className="nav-container">
+        <Link to="/" className="brand">
+          <span className="brand-badge">🤝</span>
+          <span className="brand-text">Appaño</span>
+        </Link>
+
+        <div className="nav-links">
+          <Link
+            to="/"
+            className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
+          >
+            Explorar Eventos
+          </Link>
+          <Link
+            to="/crear-evento"
+            className={`nav-link ${location.pathname === '/crear-evento' ? 'active' : ''}`}
+          >
+            + Publicar Evento
+          </Link>
+        </div>
+
+        <div className="user-selector">
+          <label htmlFor="user-select">Actuando como:</label>
+          <select
+            id="user-select"
+            value={usuarioActual ? usuarioActual.id || usuarioActual.id_usuario : ''}
+            onChange={(e) => cambiarUsuario(e.target.value)}
+          >
+            {usuariosDisponibles.map((u) => {
+              const id = u.id || u.id_usuario;
+              return (
+                <option key={id} value={id}>
+                  {u.nombre} (@{u.apodo})
+                </option>
+              );
+            })}
+          </select>
+          {usuarioActual?.fotoPerfil && (
+            <img
+              src={usuarioActual.fotoPerfil}
+              alt={usuarioActual.apodo}
+              className="nav-avatar"
+            />
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+};
+

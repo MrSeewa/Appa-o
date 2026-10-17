@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.usuario.dto.request.UsuarioRegistroReq;
@@ -22,6 +23,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping({"/usuarios", "/api/usuarios"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://127.0.0.1:5173"})
 public class UsuarioController {
 
     @Autowired
