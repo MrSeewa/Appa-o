@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { eventoService } from '../services/eventoService';
-import { useAuth } from '../context/AuthContext';
+import { servicioEvento } from '../services/eventoService';
+import { useAutenticacion } from '../context/AuthContext';
 
 export const CrearEvento = () => {
-  const { usuarioActual } = useAuth();
-  const navigate = useNavigate();
+  const { usuarioActual } = useAutenticacion();
+  const navegar = useNavigate();
 
-  const [formData, setFormData] = useState({
+  const [formulario, setFormulario] = useState({
     titulo: '',
     descripcion: '',
     categoria: 'Deportes',
@@ -27,16 +27,16 @@ export const CrearEvento = () => {
     'Otro',
   ];
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
+  const manejarCambio = (evento) => {
+    const { name, value } = evento.target;
+    setFormulario((estadoPrevio) => ({
+      ...estadoPrevio,
       [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const manejarEnvio = async (evento) => {
+    evento.preventDefault();
     if (!usuarioActual) {
       setError('Debes tener un usuario activo para publicar un evento.');
       return;
@@ -45,21 +45,21 @@ export const CrearEvento = () => {
     setGuardando(true);
     setError(null);
 
-    const payload = {
-      ...formData,
+    const datosParaGuardar = {
+      ...formulario,
       creadorId: usuarioActual.id || usuarioActual.id_usuario,
     };
 
     try {
-      const nuevoEvento = await eventoService.crear(payload);
-      navigate(`/eventos/${nuevoEvento.id}`);
-    } catch (err) {
-      console.error('Error al crear el evento:', err);
-      const msg =
-        err.response?.data?.mensaje ||
-        err.response?.data?.detalle ||
+      const nuevoEvento = await servicioEvento.crear(datosParaGuardar);
+      navegar(`/eventos/${nuevoEvento.id}`);
+    } catch (errorPeticion) {
+      console.error('Error al crear el evento:', errorPeticion);
+      const mensajeError =
+        errorPeticion.response?.data?.mensaje ||
+        errorPeticion.response?.data?.detalle ||
         'Error al comunicarse con el microservicio de Eventos.';
-      setError(msg);
+      setError(mensajeError);
     } finally {
       setGuardando(false);
     }
@@ -80,7 +80,7 @@ export const CrearEvento = () => {
 
         {error && <div className="alert-box error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="crear-evento-form">
+        <form onSubmit={manejarEnvio} className="crear-evento-form">
           <div className="form-group">
             <label htmlFor="titulo">Título del Evento *</label>
             <input
@@ -90,8 +90,8 @@ export const CrearEvento = () => {
               required
               maxLength={150}
               placeholder="Ej: Pichanga en San Joaquín, Tarde de Smash, etc."
-              value={formData.titulo}
-              onChange={handleChange}
+              value={formulario.titulo}
+              onChange={manejarCambio}
             />
           </div>
 
@@ -101,12 +101,12 @@ export const CrearEvento = () => {
               <select
                 id="categoria"
                 name="categoria"
-                value={formData.categoria}
-                onChange={handleChange}
+                value={formulario.categoria}
+                onChange={manejarCambio}
               >
-                {categoriasDisponibles.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
+                {categoriasDisponibles.map((categoria) => (
+                  <option key={categoria} value={categoria}>
+                    {categoria}
                   </option>
                 ))}
               </select>
@@ -119,8 +119,8 @@ export const CrearEvento = () => {
                 id="fechaEvento"
                 name="fechaEvento"
                 required
-                value={formData.fechaEvento}
-                onChange={handleChange}
+                value={formulario.fechaEvento}
+                onChange={manejarCambio}
               />
             </div>
           </div>
@@ -133,8 +133,8 @@ export const CrearEvento = () => {
               rows={5}
               required
               placeholder="Explica de qué trata el evento, qué hay que llevar, el lugar exacto, o las reglas básicas..."
-              value={formData.descripcion}
-              onChange={handleChange}
+              value={formulario.descripcion}
+              onChange={manejarCambio}
             />
           </div>
 
@@ -152,4 +152,3 @@ export const CrearEvento = () => {
     </div>
   );
 };
-

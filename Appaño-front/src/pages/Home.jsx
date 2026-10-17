@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { eventoService } from '../services/eventoService';
-import { EventoCard } from '../components/EventoCard';
+import { servicioEvento } from '../services/eventoService';
+import { TarjetaEvento } from '../components/EventoCard';
 
-export const Home = () => {
+export const PaginaPrincipal = () => {
   const [eventos, setEventos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
@@ -13,10 +13,10 @@ export const Home = () => {
     setCargando(true);
     setError(null);
     try {
-      const data = await eventoService.obtenerTodos();
-      setEventos(data);
-    } catch (err) {
-      console.error('Error cargando eventos:', err);
+      const datos = await servicioEvento.obtenerTodos();
+      setEventos(datos);
+    } catch (errorPeticion) {
+      console.error('Error cargando eventos:', errorPeticion);
       setError(
         'No se pudo conectar con el microservicio de Eventos (puerto 8081). Verifica que esté encendido.'
       );
@@ -29,15 +29,15 @@ export const Home = () => {
     cargarEventos();
   }, []);
 
-  const categorias = [
+  const categoriasDisponibles = [
     'TODAS',
-    ...Array.from(new Set(eventos.map((e) => e.categoria).filter(Boolean))),
+    ...Array.from(new Set(eventos.map((ev) => ev.categoria).filter(Boolean))),
   ];
 
   const eventosFiltrados =
     categoriaFiltro === 'TODAS'
       ? eventos
-      : eventos.filter((e) => e.categoria === categoriaFiltro);
+      : eventos.filter((ev) => ev.categoria === categoriaFiltro);
 
   return (
     <div className="home-page">
@@ -58,13 +58,13 @@ export const Home = () => {
         <div className="section-header">
           <h2>Próximos Eventos Disponibles</h2>
           <div className="filtro-categorias">
-            {categorias.map((cat) => (
+            {categoriasDisponibles.map((categoria) => (
               <button
-                key={cat}
-                onClick={() => setCategoriaFiltro(cat)}
-                className={`btn-filtro ${categoriaFiltro === cat ? 'active' : ''}`}
+                key={categoria}
+                onClick={() => setCategoriaFiltro(categoria)}
+                className={`btn-filtro ${categoriaFiltro === categoria ? 'active' : ''}`}
               >
-                {cat}
+                {categoria}
               </button>
             ))}
           </div>
@@ -98,7 +98,7 @@ export const Home = () => {
         {!cargando && !error && eventosFiltrados.length > 0 && (
           <div className="eventos-grid">
             {eventosFiltrados.map((evento) => (
-              <EventoCard key={evento.id} evento={evento} />
+              <TarjetaEvento key={evento.id} evento={evento} />
             ))}
           </div>
         )}
@@ -107,3 +107,5 @@ export const Home = () => {
   );
 };
 
+// Alias de compatibilidad
+export const Home = PaginaPrincipal;

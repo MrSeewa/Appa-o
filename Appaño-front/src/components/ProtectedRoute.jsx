@@ -1,9 +1,9 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAutenticacion } from '../context/AuthContext';
 
-export default function ProtectedRoute() {
-  const { usuarioActual, cargando } = useAuth();
+export default function RutaProtegida() {
+  const { usuarioActual, cargando } = useAutenticacion();
   const token = localStorage.getItem('token');
 
   // Si aún está cargando la sesión inicial desde localStorage/API, evitamos redirecciones prematuras
@@ -25,3 +25,5 @@ export default function ProtectedRoute() {
   return <Outlet />;
 }
 
+// Alias de compatibilidad
+export const ProtectedRoute = RutaProtegida;

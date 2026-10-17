@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export const EventoCard = ({ evento }) => {
-  const fecha = evento.fechaEvento
+export const TarjetaEvento = ({ evento }) => {
+  const fechaFormateada = evento.fechaEvento
     ? new Date(evento.fechaEvento).toLocaleDateString('es-CL', {
         weekday: 'short',
         year: 'numeric',
@@ -13,12 +13,16 @@ export const EventoCard = ({ evento }) => {
       })
     : 'Fecha por definir';
 
+  const inicialApodo = evento.creador?.apodo
+    ? evento.creador.apodo.charAt(0).toUpperCase()
+    : 'U';
+
   return (
     <div className="evento-card">
       <div className="card-header">
         <span className="categoria-pill">{evento.categoria || 'General'}</span>
         <span className="inscritos-badge">
-          👥 {evento.cantidadInscritos ?? 0} {evento.cantidadInscritos === 1 ? 'inscrito' : 'inscritos'}
+          {evento.cantidadInscritos ?? 0} {evento.cantidadInscritos === 1 ? 'inscrito' : 'inscritos'}
         </span>
       </div>
 
@@ -31,8 +35,7 @@ export const EventoCard = ({ evento }) => {
 
       <div className="card-meta">
         <div className="fecha-box">
-          <span className="meta-icon">📅</span>
-          <span>{fecha}</span>
+          <span>{fechaFormateada}</span>
         </div>
       </div>
 
@@ -46,7 +49,7 @@ export const EventoCard = ({ evento }) => {
             />
           ) : (
             <div className="creador-avatar-placeholder">
-              {evento.creador?.apodo ? evento.creador.apodo.charAt(0).toUpperCase() : 'U'}
+              {inicialApodo}
             </div>
           )}
           <span className="creador-apodo">@{evento.creador?.apodo || 'anónimo'}</span>
@@ -60,3 +63,5 @@ export const EventoCard = ({ evento }) => {
   );
 };
 
+// Alias de compatibilidad
+export const EventoCard = TarjetaEvento;

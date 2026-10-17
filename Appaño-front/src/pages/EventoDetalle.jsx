@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { eventoService } from '../services/eventoService';
-import { useAuth } from '../context/AuthContext';
+import { servicioEvento } from '../services/eventoService';
+import { useAutenticacion } from '../context/AuthContext';
 
-export const EventoDetalle = () => {
+export const DetalleEvento = () => {
   const { id } = useParams();
-  const { usuarioActual } = useAuth();
+  const { usuarioActual } = useAutenticacion();
 
   const [evento, setEvento] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -19,12 +19,12 @@ export const EventoDetalle = () => {
     setCargando(true);
     setError(null);
     try {
-      const data = await eventoService.obtenerPorId(id);
-      setEvento(data);
-    } catch (err) {
-      console.error('Error al cargar detalle del evento:', err);
+      const datos = await servicioEvento.obtenerPorId(id);
+      setEvento(datos);
+    } catch (errorPeticion) {
+      console.error('Error al cargar detalle del evento:', errorPeticion);
       setError(
-        err.response?.data?.mensaje ||
+        errorPeticion.response?.data?.mensaje ||
           'No se pudo encontrar el evento solicitado o falló la conexión.'
       );
     } finally {
@@ -36,7 +36,7 @@ export const EventoDetalle = () => {
     cargarEvento();
   }, [id]);
 
-  const handleInscribirse = async () => {
+  const manejarInscribirse = async () => {
     if (!usuarioActual) {
       setMensajeInscripcion('Debes tener un usuario activo para inscribirte.');
       setTipoMensaje('error');
@@ -46,26 +46,26 @@ export const EventoDetalle = () => {
     setInscribiendo(true);
     setMensajeInscripcion(null);
 
-    const usuarioId = usuarioActual.id || usuarioActual.id_usuario;
+    const idUsuario = usuarioActual.id || usuarioActual.id_usuario;
 
     try {
-      await eventoService.inscribirUsuario(id, usuarioId);
+      await servicioEvento.inscribirUsuario(id, idUsuario);
       setMensajeInscripcion(
         `¡Felicitaciones ${usuarioActual.nombre}! Te has inscrito exitosamente en este evento.`
       );
       setTipoMensaje('success');
 
       // Actualizar el contador localmente
-      setEvento((prev) => ({
-        ...prev,
-        cantidadInscritos: Number(prev.cantidadInscritos || 0) + 1,
+      setEvento((estadoPrevio) => ({
+        ...estadoPrevio,
+        cantidadInscritos: Number(estadoPrevio.cantidadInscritos || 0) + 1,
       }));
-    } catch (err) {
-      console.error('Error al inscribirse:', err);
-      const msg =
-        err.response?.data?.mensaje ||
+    } catch (errorPeticion) {
+      console.error('Error al inscribirse:', errorPeticion);
+      const mensajeError =
+        errorPeticion.response?.data?.mensaje ||
         'No fue posible completar la inscripción. Quizás ya estés registrado.';
-      setMensajeInscripcion(msg);
+      setMensajeInscripcion(mensajeError);
       setTipoMensaje('error');
     } finally {
       setInscribiendo(false);
@@ -117,12 +117,12 @@ export const EventoDetalle = () => {
         <div className="detalle-stats-bar">
           <div className="stat-item">
             <span className="stat-label">Fecha y Hora</span>
-            <span className="stat-value">📅 {fechaFormateada}</span>
+            <span className="stat-value">{fechaFormateada}</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Asistentes Confirmados</span>
             <span className="stat-value highlight">
-              👥 {evento.cantidadInscritos} {evento.cantidadInscritos === 1 ? 'persona' : 'personas'}
+              {evento.cantidadInscritos} {evento.cantidadInscritos === 1 ? 'persona' : 'personas'}
             </span>
           </div>
         </div>
@@ -156,7 +156,7 @@ export const EventoDetalle = () => {
                 {creador.biografia || 'Sin biografía disponible.'}
               </p>
               {creador.correo && (
-                <span className="creador-correo">✉️ {creador.correo}</span>
+                <span className="creador-correo">{creador.correo}</span>
               )}
             </div>
           </div>
@@ -172,7 +172,7 @@ export const EventoDetalle = () => {
               </p>
             </div>
             <button
-              onClick={handleInscribirse}
+              onClick={manejarInscribirse}
               disabled={inscribiendo}
               className="btn-inscribir"
             >
@@ -191,3 +191,5 @@ export const EventoDetalle = () => {
   );
 };
 
+// Alias de compatibilidad
+export const EventoDetalle = DetalleEvento;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAutenticacion } from '../context/AuthContext';
 // import axios from 'axios'; // Descomentar cuando conectes la API de autenticación con JWT
 
 export default function Login() {
@@ -12,45 +12,45 @@ export default function Login() {
   const [error, setError] = useState(null);
   const [cargando, setCargando] = useState(false);
 
-  const navigate = useNavigate();
-  const { login, usuariosDisponibles } = useAuth();
+  const navegar = useNavigate();
+  const { iniciarSesion, usuariosDisponibles } = useAutenticacion();
 
   // 2. Función para actualizar el estado cuando el usuario escribe
-  const handleChange = (e) => {
+  const manejarCambio = (evento) => {
     setCredenciales({
       ...credenciales,
-      [e.target.name]: e.target.value,
+      [evento.target.name]: evento.target.value,
     });
   };
 
   // 3. Función que se ejecuta al enviar el formulario
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const manejarEnvio = async (evento) => {
+    evento.preventDefault();
     setError(null);
     setCargando(true);
 
     try {
       // TODO: Aquí irá la llamada a tu futuro endpoint de Spring Boot con Spring Security
-      // const response = await axios.post('http://localhost:8080/api/auth/login', credenciales);
+      // const respuesta = await axios.post('http://localhost:8080/api/auth/login', credenciales);
       console.log('Simulando envío de credenciales:', credenciales);
 
       // Conectado con el contexto de autenticación local:
-      await login(credenciales.email, credenciales.password);
+      await iniciarSesion(credenciales.email, credenciales.password);
 
       // Redirigimos al usuario al catálogo de eventos
-      navigate('/eventos');
-    } catch (err) {
-      setError(err.message || 'Credenciales incorrectas. Intenta nuevamente.');
-      console.error(err);
+      navegar('/eventos');
+    } catch (errorPeticion) {
+      setError(errorPeticion.message || 'Credenciales incorrectas. Intenta nuevamente.');
+      console.error(errorPeticion);
     } finally {
       setCargando(false);
     }
   };
 
   // Helper para autocompletar con una cuenta de prueba
-  const handleSelectDemo = (email) => {
+  const seleccionarCuentaPrueba = (correo) => {
     setCredenciales({
-      email,
+      email: correo,
       password: 'password123',
     });
   };
@@ -66,7 +66,7 @@ export default function Login() {
 
         {error && <div className="alert-box error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="login-form">
+        <form onSubmit={manejarEnvio} className="login-form">
           <div className="form-group">
             <label htmlFor="email">Correo Electrónico:</label>
             <input
@@ -74,7 +74,7 @@ export default function Login() {
               id="email"
               name="email"
               value={credenciales.email}
-              onChange={handleChange}
+              onChange={manejarCambio}
               placeholder="ejemplo@correo.com"
               required
             />
@@ -87,7 +87,7 @@ export default function Login() {
               id="password"
               name="password"
               value={credenciales.password}
-              onChange={handleChange}
+              onChange={manejarCambio}
               placeholder="••••••••"
               required
             />
@@ -98,21 +98,21 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Sección de Cuentas Demo existentes en tu base de datos */}
+        {/* Sección de Cuentas de Prueba existentes en tu base de datos */}
         {usuariosDisponibles.length > 0 && (
           <div className="demo-accounts-box">
-            <span className="demo-title">💡 Cuentas de prueba en tu base de datos:</span>
+            <span className="demo-title">Cuentas de prueba en tu base de datos:</span>
             <div className="demo-chips">
-              {usuariosDisponibles.map((u) => {
-                const id = u.id || u.id_usuario;
+              {usuariosDisponibles.map((usuario) => {
+                const idUsuario = usuario.id || usuario.id_usuario;
                 return (
                   <button
-                    key={id}
+                    key={idUsuario}
                     type="button"
                     className="demo-chip"
-                    onClick={() => handleSelectDemo(u.correo)}
+                    onClick={() => seleccionarCuentaPrueba(usuario.correo)}
                   >
-                    @{u.apodo} ({u.correo})
+                    @{usuario.apodo} ({usuario.correo})
                   </button>
                 );
               })}
@@ -123,4 +123,3 @@ export default function Login() {
     </div>
   );
 }
-
