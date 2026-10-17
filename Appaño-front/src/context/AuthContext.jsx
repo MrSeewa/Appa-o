@@ -14,8 +14,10 @@ export const AuthProvider = ({ children }) => {
       const data = await usuarioService.obtenerTodos();
       setUsuariosDisponibles(data);
 
+      const token = localStorage.getItem('token');
       const guardadoId = localStorage.getItem('usuarioActualId');
-      if (guardadoId) {
+
+      if (token && guardadoId) {
         const encontrado = data.find((u) => u.id === Number(guardadoId) || u.id_usuario === Number(guardadoId));
         if (encontrado) {
           setUsuarioActual(encontrado);
@@ -23,11 +25,8 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
-      // Si no hay guardado, seleccionar el primero disponible
-      if (data.length > 0) {
-        setUsuarioActual(data[0]);
-        localStorage.setItem('usuarioActualId', data[0].id || data[0].id_usuario);
-      }
+      // Si no hay token guardado, el estado permanece sin sesión para que ProtectedRoute actúe
+      setUsuarioActual(null);
     } catch (err) {
       console.error('Error al cargar usuarios para la sesión:', err);
     } finally {
@@ -47,6 +46,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const login = async (email, password) => {
+    // Cuando el backend tenga Spring Security / JWT:
+    // const res = await axios.post('http://localhost:8080/api/auth/login', { email, password });
+    
+    // Validación temporal con los usuarios reales del microservicio:
+    const usuario = usuariosDisponibles.find(
+      (u) => u.correo?.toLowerCase() === email?.trim().toLowerCase()
+    );
+
+    if (!usuario) {
+      throw new Error('Usuario no encontrado con ese correo electrónico.');
+    }
+
+    setUsuarioActual(usuario);
+    localStorage.setItem('usuarioActualId', usuario.id || usuario.id_usuario);
+    localStorage.setItem('token', 'simulated-jwt-token-dev');
+    return usuario;
+  };
+
+  const logout = () => {
+    setUsuarioActual(null);
+    localStorage.removeItem('usuarioActualId');
+    localStorage.removeItem('token');
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -54,6 +78,8 @@ export const AuthProvider = ({ children }) => {
         usuariosDisponibles,
         cambiarUsuario,
         refrescarUsuarios,
+        login,
+        logout,
         cargando,
       }}
     >
