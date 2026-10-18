@@ -48,4 +48,9 @@ public class EventoController {
     public void inscribirseAlEvento(@PathVariable Long id, @RequestParam Long usuarioId) {
         eventoService.inscribirUsuario(id, usuarioId);
     }
+
+    @GetMapping("/inscripciones/usuario/{usuarioId}")
+    public ResponseEntity<List<EventoDetalleRes>> listarEventosInscritosPorUsuario(@PathVariable Long usuarioId) {
+        return ResponseEntity.ok(eventoService.obtenerEventosInscritosPorUsuario(usuarioId));
+    }
 }

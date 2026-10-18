@@ -491,6 +491,45 @@ body {
   letter-spacing: 0.04em;
 }
 
+.card-etiquetas {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.estado-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.04em;
+}
+
+.estado-badge.proximo {
+  background: rgba(0, 240, 255, 0.16);
+  color: var(--fm-cyan);
+  border: 1px solid rgba(0, 240, 255, 0.45);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+}
+
+.estado-badge.finalizado {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.evento-card.evento-pasado {
+  opacity: 0.82;
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.evento-card.evento-pasado:hover {
+  opacity: 1;
+  border-color: var(--fm-cyan);
+}
+
 .inscritos-badge {
   font-size: 0.8rem;
   font-weight: 800;

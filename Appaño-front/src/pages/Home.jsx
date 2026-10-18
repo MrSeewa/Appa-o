@@ -29,15 +29,29 @@ export const PaginaPrincipal = () => {
     cargarEventos();
   }, []);
 
+  // Filtrar solo los eventos vigentes (cuya fecha sea posterior o igual a la actual)
+  const ahora = new Date();
+  const eventosVigentes = eventos.filter((ev) => {
+    if (!ev.fechaEvento) return true;
+    return new Date(ev.fechaEvento).getTime() >= ahora.getTime();
+  });
+
+  // Ordenar cronológicamente los eventos vigentes (los más cercanos primero)
+  const eventosOrdenados = [...eventosVigentes].sort((a, b) => {
+    const tiempoA = a.fechaEvento ? new Date(a.fechaEvento).getTime() : 0;
+    const tiempoB = b.fechaEvento ? new Date(b.fechaEvento).getTime() : 0;
+    return tiempoA - tiempoB;
+  });
+
   const categoriasDisponibles = [
     'TODAS',
-    ...Array.from(new Set(eventos.map((ev) => ev.categoria).filter(Boolean))),
+    ...Array.from(new Set(eventosVigentes.map((ev) => ev.categoria).filter(Boolean))),
   ];
 
   const eventosFiltrados =
     categoriaFiltro === 'TODAS'
-      ? eventos
-      : eventos.filter((ev) => ev.categoria === categoriaFiltro);
+      ? eventosOrdenados
+      : eventosOrdenados.filter((ev) => ev.categoria === categoriaFiltro);
 
   return (
     <div className="home-page">

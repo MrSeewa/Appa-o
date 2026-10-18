@@ -14,4 +14,6 @@ public interface EventoService {
     EventoDetalleRes obtenerDetalleEvento(Long eventoId);
 
     void inscribirUsuario(Long eventoId, Long usuarioId);
+
+    List<EventoDetalleRes> obtenerEventosInscritosPorUsuario(Long usuarioId);
 }

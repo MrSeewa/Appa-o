@@ -17,10 +17,21 @@ export const TarjetaEvento = ({ evento }) => {
     ? evento.creador.apodo.charAt(0).toUpperCase()
     : 'U';
 
+  const esPasado = evento.fechaEvento
+    ? new Date(evento.fechaEvento).getTime() < Date.now()
+    : false;
+
   return (
-    <div className="evento-card">
+    <div className={`evento-card ${esPasado ? 'evento-pasado' : ''}`}>
       <div className="card-header">
-        <span className="categoria-pill">{evento.categoria || 'General'}</span>
+        <div className="card-etiquetas">
+          <span className="categoria-pill">{evento.categoria || 'General'}</span>
+          {esPasado ? (
+            <span className="estado-badge finalizado">Finalizado</span>
+          ) : (
+            <span className="estado-badge proximo">Próximo</span>
+          )}
+        </div>
         <span className="inscritos-badge">
           {evento.cantidadInscritos ?? 0} {evento.cantidadInscritos === 1 ? 'inscrito' : 'inscritos'}
         </span>

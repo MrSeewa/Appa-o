@@ -24,6 +24,12 @@ export const servicioEvento = {
     const respuesta = await apiEvento.post(`/${idEvento}/inscribir?usuarioId=${idUsuario}`);
     return respuesta.data;
   },
+
+  // Obtener los eventos a los que se ha inscrito un usuario
+  obtenerInscripcionesUsuario: async (idUsuario) => {
+    const respuesta = await apiEvento.get(`/inscripciones/usuario/${idUsuario}`);
+    return respuesta.data;
+  },
 };
 
 // Alias compatible

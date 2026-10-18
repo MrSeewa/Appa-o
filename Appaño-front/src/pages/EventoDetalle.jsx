@@ -166,7 +166,7 @@ export const DetalleEvento = () => {
         <div className="inscripcion-panel">
           <div className="inscripcion-header">
             <div>
-              <h3>¿Te apañas a asistir?</h3>
+              <h3>¿Apañas?</h3>
               <p>
                 Inscríbete como <strong>{usuarioActual?.nombre}</strong> (@{usuarioActual?.apodo})
               </p>
@@ -176,7 +176,7 @@ export const DetalleEvento = () => {
               disabled={inscribiendo}
               className="btn-inscribir"
             >
-              {inscribiendo ? 'Inscribiendo...' : '¡Añáñame! (Inscribirme)'}
+              {inscribiendo ? 'Inscribiendo...' : '¡Apaño! (Inscribirme)'}
             </button>
           </div>
 

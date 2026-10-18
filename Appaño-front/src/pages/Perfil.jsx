@@ -24,6 +24,12 @@ export const Perfil = () => {
   // Eventos creados por este usuario
   const [misEventos, setMisEventos] = useState([]);
   const [cargandoEventos, setCargandoEventos] = useState(false);
+  const [filtroEventosCreados, setFiltroEventosCreados] = useState('todos');
+
+  // Eventos a los que este usuario se ha inscrito
+  const [misInscripciones, setMisInscripciones] = useState([]);
+  const [cargandoInscripciones, setCargandoInscripciones] = useState(false);
+  const [filtroInscripciones, setFiltroInscripciones] = useState('todos');
 
   // Estados de retroalimentacion
   const [guardando, setGuardando] = useState(false);
@@ -41,6 +47,7 @@ export const Perfil = () => {
         fotoPerfil: usuarioActual.fotoPerfil || '',
       });
       cargarMisEventos();
+      cargarMisInscripciones();
     }
   }, [usuarioActual]);
 
@@ -53,13 +60,47 @@ export const Perfil = () => {
 
       // Filtrar los eventos donde el creador coincida con el usuario actual
       const filtrados = todosLosEventos.filter(
-        (ev) => ev.creadorId === idUsuario || ev.creador?.id === idUsuario || ev.creador?.id_usuario === idUsuario
+        (ev) =>
+          Number(ev.creadorId) === Number(idUsuario) ||
+          Number(ev.creador?.id) === Number(idUsuario) ||
+          Number(ev.creador?.id_usuario) === Number(idUsuario)
       );
+
+      // Ordenar cronológicamente (más recientes primero)
+      filtrados.sort((a, b) => {
+        const tiempoA = a.fechaEvento ? new Date(a.fechaEvento).getTime() : 0;
+        const tiempoB = b.fechaEvento ? new Date(b.fechaEvento).getTime() : 0;
+        return tiempoB - tiempoA;
+      });
+
       setMisEventos(filtrados);
     } catch (error) {
       console.error('Error al cargar eventos del usuario:', error);
     } finally {
       setCargandoEventos(false);
+    }
+  };
+
+  const cargarMisInscripciones = async () => {
+    if (!usuarioActual) return;
+    setCargandoInscripciones(true);
+    try {
+      const idUsuario = usuarioActual.id || usuarioActual.id_usuario;
+      const inscritos = await servicioEvento.obtenerInscripcionesUsuario(idUsuario);
+
+      // Ordenar cronológicamente (más recientes primero)
+      const listaInscritos = [...(inscritos || [])];
+      listaInscritos.sort((a, b) => {
+        const tiempoA = a.fechaEvento ? new Date(a.fechaEvento).getTime() : 0;
+        const tiempoB = b.fechaEvento ? new Date(b.fechaEvento).getTime() : 0;
+        return tiempoB - tiempoA;
+      });
+
+      setMisInscripciones(listaInscritos);
+    } catch (error) {
+      console.error('Error al cargar historial de inscripciones:', error);
+    } finally {
+      setCargandoInscripciones(false);
     }
   };
 
@@ -135,6 +176,34 @@ export const Perfil = () => {
       })
     : 'Registro reciente';
 
+  // Cálculos para eventos creados (el creador conserva todo su historial: pasados y próximos)
+  const eventosCreadosVigentes = misEventos.filter(
+    (ev) => !ev.fechaEvento || new Date(ev.fechaEvento).getTime() >= Date.now()
+  );
+  const eventosCreadosPasados = misEventos.filter(
+    (ev) => ev.fechaEvento && new Date(ev.fechaEvento).getTime() < Date.now()
+  );
+  const eventosCreadosMostrar =
+    filtroEventosCreados === 'vigentes'
+      ? eventosCreadosVigentes
+      : filtroEventosCreados === 'pasados'
+      ? eventosCreadosPasados
+      : misEventos;
+
+  // Cálculos para asistencias e inscripciones del usuario
+  const inscripcionesProximas = misInscripciones.filter(
+    (ev) => !ev.fechaEvento || new Date(ev.fechaEvento).getTime() >= Date.now()
+  );
+  const inscripcionesPasadas = misInscripciones.filter(
+    (ev) => ev.fechaEvento && new Date(ev.fechaEvento).getTime() < Date.now()
+  );
+  const inscripcionesMostrar =
+    filtroInscripciones === 'proximos'
+      ? inscripcionesProximas
+      : filtroInscripciones === 'pasados'
+      ? inscripcionesPasadas
+      : misInscripciones;
+
   return (
     <div className="perfil-container">
       {/* Cabecera del Perfil con Banner y Avatar */}
@@ -188,7 +257,7 @@ export const Perfil = () => {
           className={`perfil-tab-btn ${pestanaActiva === 'inscripciones' ? 'active' : ''}`}
           onClick={() => setPestanaActiva('inscripciones')}
         >
-          Historial de Asistencias
+          Historial de Asistencias ({misInscripciones.length})
         </button>
 
         <button
@@ -303,8 +372,8 @@ export const Perfil = () => {
       {pestanaActiva === 'eventos' && (
         <div className="perfil-card">
           <div className="perfil-section-header">
-            <h3>Eventos que has publicado</h3>
-            <p>Monitorea la cantidad de participantes y revisa los detalles de tus actividades organizadas.</p>
+            <h3>Historial de Eventos Publicados</h3>
+            <p>Monitorea tus actividades pasadas y próximas. Tus eventos creados permanecen en tu historial aunque ya haya pasado su fecha.</p>
           </div>
 
           {cargandoEventos && (
@@ -324,33 +393,104 @@ export const Perfil = () => {
           )}
 
           {!cargandoEventos && misEventos.length > 0 && (
-            <div className="eventos-grid" style={{ marginTop: '1.5rem' }}>
-              {misEventos.map((ev) => (
-                <TarjetaEvento key={ev.id} evento={ev} />
-              ))}
-            </div>
+            <>
+              <div className="filtro-categorias" style={{ marginTop: '1rem', marginBottom: '1.25rem' }}>
+                <button
+                  className={`btn-filtro ${filtroEventosCreados === 'todos' ? 'active' : ''}`}
+                  onClick={() => setFiltroEventosCreados('todos')}
+                >
+                  Todos ({misEventos.length})
+                </button>
+                <button
+                  className={`btn-filtro ${filtroEventosCreados === 'vigentes' ? 'active' : ''}`}
+                  onClick={() => setFiltroEventosCreados('vigentes')}
+                >
+                  Próximos ({eventosCreadosVigentes.length})
+                </button>
+                <button
+                  className={`btn-filtro ${filtroEventosCreados === 'pasados' ? 'active' : ''}`}
+                  onClick={() => setFiltroEventosCreados('pasados')}
+                >
+                  Finalizados ({eventosCreadosPasados.length})
+                </button>
+              </div>
+
+              {eventosCreadosMostrar.length === 0 ? (
+                <div className="state-box empty-box">
+                  <p>No tienes eventos registrados bajo este filtro.</p>
+                </div>
+              ) : (
+                <div className="eventos-grid">
+                  {eventosCreadosMostrar.map((ev) => (
+                    <TarjetaEvento key={ev.id} evento={ev} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
 
-      {/* Contenido de la Pestana: Historial de Asistencias (A futuro) */}
+      {/* Contenido de la Pestana: Historial de Asistencias e Inscripciones */}
       {pestanaActiva === 'inscripciones' && (
         <div className="perfil-card">
           <div className="perfil-section-header">
             <h3>Historial de Asistencias e Inscripciones</h3>
-            <p>Aquí se listarán todos los eventos a los que te has sumado en la comunidad.</p>
+            <p>Revisa todos los eventos en los que te has inscrito para participar en la comunidad.</p>
           </div>
 
-          <div className="state-box futuro-box">
-            <h4>Módulo en desarrollo</h4>
-            <p>
-              Actualmente las inscripciones se guardan en la base de datos de eventos (tabla inscripciones).
-              Pronto podrás ver aquí tu lista completa de actividades pasadas y futuras, confirmar asistencia y descargar recordatorios.
-            </p>
-            <Link to="/" className="btn-primary" style={{ marginTop: '1rem' }}>
-              Explorar eventos disponibles para asistir
-            </Link>
-          </div>
+          {cargandoInscripciones && (
+            <div className="state-box">
+              <div className="spinner"></div>
+              <p>Cargando tu historial de asistencias...</p>
+            </div>
+          )}
+
+          {!cargandoInscripciones && misInscripciones.length === 0 && (
+            <div className="state-box empty-box">
+              <p>Aún no te has inscrito a ningún evento.</p>
+              <Link to="/" className="btn-primary" style={{ marginTop: '1rem' }}>
+                Explorar eventos disponibles
+              </Link>
+            </div>
+          )}
+
+          {!cargandoInscripciones && misInscripciones.length > 0 && (
+            <>
+              <div className="filtro-categorias" style={{ marginTop: '1rem', marginBottom: '1.25rem' }}>
+                <button
+                  className={`btn-filtro ${filtroInscripciones === 'todos' ? 'active' : ''}`}
+                  onClick={() => setFiltroInscripciones('todos')}
+                >
+                  Todas ({misInscripciones.length})
+                </button>
+                <button
+                  className={`btn-filtro ${filtroInscripciones === 'proximos' ? 'active' : ''}`}
+                  onClick={() => setFiltroInscripciones('proximos')}
+                >
+                  Por asistir ({inscripcionesProximas.length})
+                </button>
+                <button
+                  className={`btn-filtro ${filtroInscripciones === 'pasados' ? 'active' : ''}`}
+                  onClick={() => setFiltroInscripciones('pasados')}
+                >
+                  Finalizados ({inscripcionesPasadas.length})
+                </button>
+              </div>
+
+              {inscripcionesMostrar.length === 0 ? (
+                <div className="state-box empty-box">
+                  <p>No tienes asistencias registradas bajo este filtro.</p>
+                </div>
+              ) : (
+                <div className="eventos-grid">
+                  {inscripcionesMostrar.map((ev) => (
+                    <TarjetaEvento key={ev.id} evento={ev} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 

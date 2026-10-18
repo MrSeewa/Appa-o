@@ -96,6 +96,16 @@ public class EventoServiceImpl implements EventoService {
                 .toList();
     }
 
+    @Override
+    public List<EventoDetalleRes> obtenerEventosInscritosPorUsuario(Long usuarioId) {
+        List<Inscripcion> inscripciones = inscripcionRepository.findByUsuarioIdConEvento(usuarioId);
+        return inscripciones.stream()
+                .map(Inscripcion::getEvento)
+                .filter(java.util.Objects::nonNull)
+                .map(this::construirDetalleEvento)
+                .toList();
+    }
+
     private EventoDetalleRes construirDetalleEvento(Evento evento) {
         UsuarioPublicoDTO creador;
         try {
