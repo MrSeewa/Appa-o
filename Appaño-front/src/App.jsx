@@ -34,7 +34,7 @@ export default function App() {
             </Routes>
           </main>
           <footer className="footer">
-            <p>Yo_Appaño © 2026 - Plataforma de eventos y comunidad (made in chilito)</p>
+            <p>Yo Appaño • Plataforma comunitaria de eventos • Hecho en Chile</p>
           </footer>
         </div>
       </BrowserRouter>

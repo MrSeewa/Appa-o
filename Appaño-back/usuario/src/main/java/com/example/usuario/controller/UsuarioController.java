@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.usuario.dto.request.UsuarioActualizarReq;
 import com.example.usuario.dto.request.UsuarioRegistroReq;
 import com.example.usuario.dto.response.UsuarioRes;
 import com.example.usuario.service.UsuarioService;
@@ -56,7 +57,7 @@ public class UsuarioController {
     @PutMapping("/{id_usuario}")
     public ResponseEntity<UsuarioRes> actualizarUsuario(
             @PathVariable Long id_usuario,
-            @Valid @RequestBody UsuarioRegistroReq usuarioActualizar) {
+            @Valid @RequestBody UsuarioActualizarReq usuarioActualizar) {
         return ResponseEntity.ok(usuarioService.actualizarUsuario(id_usuario, usuarioActualizar));
     }
 

@@ -85,10 +85,15 @@ export const Perfil = () => {
       setMensajeExito('Tu información de perfil se actualizó correctamente.');
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
-      const mensaje =
-        error.response?.data?.mensaje ||
-        error.response?.data?.detalle ||
-        'No se pudo actualizar el perfil. Intenta nuevamente.';
+      let mensaje = 'No se pudo actualizar el perfil. Intenta nuevamente.';
+      const datosError = error.response?.data;
+      if (datosError?.errores && typeof datosError.errores === 'object') {
+        mensaje = Object.values(datosError.errores).join('. ');
+      } else if (datosError?.mensaje) {
+        mensaje = datosError.mensaje;
+      } else if (datosError?.detalle) {
+        mensaje = datosError.detalle;
+      }
       setMensajeError(mensaje);
     } finally {
       setGuardando(false);

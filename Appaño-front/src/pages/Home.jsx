@@ -42,14 +42,14 @@ export const PaginaPrincipal = () => {
   return (
     <div className="home-page">
       <header className="hero-section">
-        <h1>Encuentra y organízate con tu comunidad</h1>
+        <h1>Conecta, Organiza y Apaña en tu Comunidad</h1>
         <p>
-          Descubre actividades, pichangas, talleres y juntas. Inscríbete o publica
-          tu propio evento en segundos.
+          Explora actividades, deportes, música, videojuegos y talleres.
+          Únete a eventos en tiempo real o publica el tuyo en segundos.
         </p>
         <div className="hero-actions">
           <Link to="/crear-evento" className="btn-primary">
-            + Crear un Nuevo Evento
+            + Publicar un Evento
           </Link>
         </div>
       </header>

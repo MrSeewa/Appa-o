@@ -20,6 +20,7 @@ export const BarraNavegacion = () => {
       <div className="nav-container">
         <Link to="/" className="brand">
           <span className="brand-text">Yo Appaño</span>
+          <span className="brand-badge">metro</span>
         </Link>
 
         <div className="nav-links">

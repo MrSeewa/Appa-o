@@ -86,6 +86,15 @@ export const ProveedorAutenticacion = ({ children }) => {
     );
   };
 
+  const registrarUsuario = async (datosNuevoUsuario) => {
+    const nuevoUsuario = await servicioUsuario.crear(datosNuevoUsuario);
+    setUsuariosDisponibles((previos) => [...previos, nuevoUsuario]);
+    setUsuarioActual(nuevoUsuario);
+    localStorage.setItem('usuarioActualId', nuevoUsuario.id || nuevoUsuario.id_usuario);
+    localStorage.setItem('token', 'simulated-jwt-token-dev');
+    return nuevoUsuario;
+  };
+
   return (
     <ContextoAutenticacion.Provider
       value={{
@@ -94,11 +103,13 @@ export const ProveedorAutenticacion = ({ children }) => {
         cambiarUsuario,
         refrescarUsuarios,
         actualizarDatosSesion,
+        registrarUsuario,
         iniciarSesion,
         cerrarSesion,
         // Alias de compatibilidad
         login: iniciarSesion,
         logout: cerrarSesion,
+        registro: registrarUsuario,
         cargando,
       }}
     >

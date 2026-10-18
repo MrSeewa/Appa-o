@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.usuario.dto.request.UsuarioActualizarReq;
 import com.example.usuario.dto.request.UsuarioRegistroReq;
 import com.example.usuario.dto.response.UsuarioRes;
 import com.example.usuario.models.entities.Usuario;
@@ -73,6 +74,30 @@ public class UsuarioService {
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado con esa id");
         }
+    }
+
+    public UsuarioRes actualizarUsuario(Long id_usuario, UsuarioActualizarReq datosActualizar) {
+        Usuario usuario = usuarioRepository.findById(id_usuario).orElse(null);
+        if (usuario == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado con esa id");
+        }
+        usuario.setNombre(datosActualizar.getNombre());
+        usuario.setApodo(datosActualizar.getApodo());
+        usuario.setCorreo(datosActualizar.getCorreo());
+        if (datosActualizar.getPassword() != null && !datosActualizar.getPassword().isBlank()) {
+            if (datosActualizar.getPassword().length() < 6) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña debe tener al menos 6 caracteres");
+            }
+            usuario.setPassword(datosActualizar.getPassword());
+        }
+        usuario.setFotoPerfil(datosActualizar.getFotoPerfil());
+        usuario.setBiografia(datosActualizar.getBiografia());
+        if (datosActualizar.getRol() != null) {
+            usuario.setRol(datosActualizar.getRol());
+        }
+
+        Usuario usuarioActualizado = usuarioRepository.save(usuario);
+        return UsuarioRes.fromEntity(usuarioActualizado);
     }
 
     public UsuarioRes actualizarUsuario(Long id_usuario, UsuarioRegistroReq datosActualizar) {
