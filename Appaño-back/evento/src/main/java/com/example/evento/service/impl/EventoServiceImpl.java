@@ -1,6 +1,7 @@
 package com.example.evento.service.impl;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.example.evento.client.UsuarioClient;
 import com.example.evento.model.entities.Evento;
 import com.example.evento.model.entities.Inscripcion;
+import com.example.evento.model.request.EventoActualizarReq;
 import com.example.evento.model.request.EventoRegistroReq;
 import com.example.evento.model.response.EventoDetalleRes;
 import com.example.evento.model.response.UsuarioPublicoDTO;
@@ -90,6 +92,25 @@ public class EventoServiceImpl implements EventoService {
     }
 
     @Override
+    public EventoDetalleRes actualizarEvento(Long eventoId, EventoActualizarReq request) {
+        Evento evento = eventoRepository.findById(eventoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
+
+        // Validar que únicamente el creador del evento pueda modificarlo
+        if (!Objects.equals(evento.getCreadorId(), request.getUsuarioId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el creador del evento puede modificarlo");
+        }
+
+        evento.setTitulo(request.getTitulo());
+        evento.setDescripcion(request.getDescripcion());
+        evento.setCategoria(request.getCategoria());
+        evento.setFechaEvento(request.getFechaEvento());
+
+        Evento actualizado = eventoRepository.save(evento);
+        return construirDetalleEvento(actualizado);
+    }
+
+    @Override
     public List<EventoDetalleRes> obtenerTodosLosEventos() {
         return eventoRepository.findAll().stream()
                 .map(this::construirDetalleEvento)
@@ -101,7 +122,7 @@ public class EventoServiceImpl implements EventoService {
         List<Inscripcion> inscripciones = inscripcionRepository.findByUsuarioIdConEvento(usuarioId);
         return inscripciones.stream()
                 .map(Inscripcion::getEvento)
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .map(this::construirDetalleEvento)
                 .toList();
     }
@@ -129,4 +150,3 @@ public class EventoServiceImpl implements EventoService {
                 .build();
     }
 }
-

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAutenticacion } from '../context/AuthContext';
 import { servicioUsuario } from '../services/usuarioService';
 import { servicioEvento } from '../services/eventoService';
@@ -7,12 +7,26 @@ import { TarjetaEvento } from '../components/EventoCard';
 import { SubirFotoPerfil } from '../components/SubirFotoPerfil';
 
 export const Perfil = () => {
-  const { usuarioActual, actualizarDatosSesion } = useAutenticacion();
+  const { id: idUrl } = useParams();
+  const { usuarioActual, actualizarDatosSesion, cerrarSesion } = useAutenticacion();
+  const navegar = useNavigate();
 
-  // Pestana activa: 'datos' | 'eventos' | 'inscripciones' | 'ajustes'
-  const [pestanaActiva, setPestanaActiva] = useState('datos');
+  const idUsuarioActual = usuarioActual?.id || usuarioActual?.id_usuario;
+  const esPropioPerfil = !idUrl || Number(idUrl) === Number(idUsuarioActual);
 
-  // Estado del formulario de edicion de perfil
+  const manejarCerrarSesion = () => {
+    cerrarSesion();
+    navegar('/login', { replace: true });
+  };
+
+  // Pestaña activa: 'datos' | 'eventos' | 'inscripciones' | 'ajustes'
+  const [pestanaActiva, setPestanaActiva] = useState(esPropioPerfil ? 'datos' : 'eventos');
+
+  // Usuario que se está visualizando (propio o de otro miembro)
+  const [usuarioVisualizado, setUsuarioVisualizado] = useState(null);
+  const [cargandoUsuario, setCargandoUsuario] = useState(true);
+
+  // Estado del formulario de edición de perfil (solo si es perfil propio)
   const [formulario, setFormulario] = useState({
     nombre: '',
     apodo: '',
@@ -31,39 +45,60 @@ export const Perfil = () => {
   const [cargandoInscripciones, setCargandoInscripciones] = useState(false);
   const [filtroInscripciones, setFiltroInscripciones] = useState('todos');
 
-  // Estados de retroalimentacion
+  // Estados de retroalimentación
   const [guardando, setGuardando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState(null);
   const [mensajeError, setMensajeError] = useState(null);
 
-  // Sincronizar el formulario cuando cambie el usuario actual
+  // Cargar información del usuario según si es perfil propio o de otro
   useEffect(() => {
-    if (usuarioActual) {
-      setFormulario({
-        nombre: usuarioActual.nombre || '',
-        apodo: usuarioActual.apodo || '',
-        correo: usuarioActual.correo || '',
-        biografia: usuarioActual.biografia || '',
-        fotoPerfil: usuarioActual.fotoPerfil || '',
-      });
-      cargarMisEventos();
-      cargarMisInscripciones();
-    }
-  }, [usuarioActual]);
+    const cargarDatosPerfil = async () => {
+      setCargandoUsuario(true);
+      if (esPropioPerfil) {
+        if (usuarioActual) {
+          setUsuarioVisualizado(usuarioActual);
+          setFormulario({
+            nombre: usuarioActual.nombre || '',
+            apodo: usuarioActual.apodo || '',
+            correo: usuarioActual.correo || '',
+            biografia: usuarioActual.biografia || '',
+            fotoPerfil: usuarioActual.fotoPerfil || '',
+          });
+          cargarEventosDeUsuario(idUsuarioActual);
+          cargarInscripcionesDeUsuario(idUsuarioActual);
+        }
+        setCargandoUsuario(false);
+      } else {
+        try {
+          const usuarioExterno = await servicioUsuario.obtenerPorId(idUrl);
+          setUsuarioVisualizado(usuarioExterno);
+          setPestanaActiva('eventos');
+          cargarEventosDeUsuario(idUrl);
+          cargarInscripcionesDeUsuario(idUrl);
+        } catch (errorCarga) {
+          console.error('Error cargando usuario externo:', errorCarga);
+          setMensajeError('No se pudo cargar el perfil del usuario solicitado.');
+        } finally {
+          setCargandoUsuario(false);
+        }
+      }
+    };
 
-  const cargarMisEventos = async () => {
-    if (!usuarioActual) return;
+    cargarDatosPerfil();
+  }, [idUrl, usuarioActual, esPropioPerfil]);
+
+  const cargarEventosDeUsuario = async (idObjetivo) => {
+    if (!idObjetivo) return;
     setCargandoEventos(true);
     try {
       const todosLosEventos = await servicioEvento.obtenerTodos();
-      const idUsuario = usuarioActual.id || usuarioActual.id_usuario;
 
-      // Filtrar los eventos donde el creador coincida con el usuario actual
+      // Filtrar los eventos creados por el usuario objetivo
       const filtrados = todosLosEventos.filter(
         (ev) =>
-          Number(ev.creadorId) === Number(idUsuario) ||
-          Number(ev.creador?.id) === Number(idUsuario) ||
-          Number(ev.creador?.id_usuario) === Number(idUsuario)
+          Number(ev.creadorId) === Number(idObjetivo) ||
+          Number(ev.creador?.id) === Number(idObjetivo) ||
+          Number(ev.creador?.id_usuario) === Number(idObjetivo)
       );
 
       // Ordenar cronológicamente (más recientes primero)
@@ -81,12 +116,11 @@ export const Perfil = () => {
     }
   };
 
-  const cargarMisInscripciones = async () => {
-    if (!usuarioActual) return;
+  const cargarInscripcionesDeUsuario = async (idObjetivo) => {
+    if (!idObjetivo) return;
     setCargandoInscripciones(true);
     try {
-      const idUsuario = usuarioActual.id || usuarioActual.id_usuario;
-      const inscritos = await servicioEvento.obtenerInscripcionesUsuario(idUsuario);
+      const inscritos = await servicioEvento.obtenerInscripcionesUsuario(idObjetivo);
 
       // Ordenar cronológicamente (más recientes primero)
       const listaInscritos = [...(inscritos || [])];
@@ -114,6 +148,8 @@ export const Perfil = () => {
 
   const manejarGuardar = async (evento) => {
     evento.preventDefault();
+    if (!esPropioPerfil) return;
+
     setGuardando(true);
     setMensajeExito(null);
     setMensajeError(null);
@@ -123,6 +159,7 @@ export const Perfil = () => {
     try {
       const usuarioActualizado = await servicioUsuario.actualizar(idUsuario, formulario);
       actualizarDatosSesion(usuarioActualizado);
+      setUsuarioVisualizado(usuarioActualizado);
       setMensajeExito('Tu información de perfil se actualizó correctamente.');
     } catch (error) {
       console.error('Error al actualizar perfil:', error);
@@ -150,33 +187,46 @@ export const Perfil = () => {
       ...usuarioActual,
       fotoPerfil: nuevaUrl,
     });
+    setUsuarioVisualizado((prev) => ({
+      ...prev,
+      fotoPerfil: nuevaUrl,
+    }));
     setMensajeExito('Tu nueva foto de perfil ha sido subida y guardada correctamente.');
   };
 
-  if (!usuarioActual) {
+  if (cargandoUsuario) {
     return (
       <div className="state-box" style={{ maxWidth: '450px', margin: '4rem auto' }}>
-        <p>No hay una sesión activa para mostrar el perfil.</p>
-        <Link to="/login" className="btn-primary" style={{ marginTop: '1rem' }}>
-          Ir a Iniciar Sesión
+        <div className="spinner"></div>
+        <p>Cargando información del perfil...</p>
+      </div>
+    );
+  }
+
+  if (!usuarioVisualizado) {
+    return (
+      <div className="state-box error-box" style={{ maxWidth: '450px', margin: '4rem auto' }}>
+        <p>{mensajeError || 'No se encontró el usuario solicitado.'}</p>
+        <Link to="/" className="btn-primary" style={{ marginTop: '1rem' }}>
+          Volver al inicio
         </Link>
       </div>
     );
   }
 
-  const inicialApodo = usuarioActual.apodo
-    ? usuarioActual.apodo.charAt(0).toUpperCase()
+  const inicialApodo = usuarioVisualizado.apodo
+    ? usuarioVisualizado.apodo.charAt(0).toUpperCase()
     : 'U';
 
-  const fechaMiembro = usuarioActual.fechaRegistro
-    ? new Date(usuarioActual.fechaRegistro).toLocaleDateString('es-CL', {
+  const fechaMiembro = usuarioVisualizado.fechaRegistro
+    ? new Date(usuarioVisualizado.fechaRegistro).toLocaleDateString('es-CL', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
       })
     : 'Registro reciente';
 
-  // Cálculos para eventos creados (el creador conserva todo su historial: pasados y próximos)
+  // Cálculos para eventos creados
   const eventosCreadosVigentes = misEventos.filter(
     (ev) => !ev.fechaEvento || new Date(ev.fechaEvento).getTime() >= Date.now()
   );
@@ -209,10 +259,10 @@ export const Perfil = () => {
       {/* Cabecera del Perfil con Banner y Avatar */}
       <div className="perfil-card perfil-hero">
         <div className="perfil-avatar-container">
-          {usuarioActual.fotoPerfil ? (
+          {usuarioVisualizado.fotoPerfil ? (
             <img
-              src={usuarioActual.fotoPerfil}
-              alt={usuarioActual.apodo}
+              src={usuarioVisualizado.fotoPerfil}
+              alt={usuarioVisualizado.apodo}
               className="perfil-avatar-img"
             />
           ) : (
@@ -224,52 +274,71 @@ export const Perfil = () => {
 
         <div className="perfil-hero-info">
           <div className="perfil-hero-header">
-            <h2>{usuarioActual.nombre}</h2>
-            <span className="rol-badge">{usuarioActual.rol || 'USER'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+              <h2>{usuarioVisualizado.nombre}</h2>
+              <span className="rol-badge">{usuarioVisualizado.rol || 'USER'}</span>
+              {!esPropioPerfil && (
+                <span className="perfil-tag-comunidad">Miembro de Yo Appaño</span>
+              )}
+            </div>
+
+            {esPropioPerfil && (
+              <button
+                onClick={manejarCerrarSesion}
+                className="btn-logout"
+                title="Cerrar sesión activa en este dispositivo"
+              >
+                Cerrar Sesión
+              </button>
+            )}
           </div>
-          <p className="perfil-apodo-tag">@{usuarioActual.apodo}</p>
+          <p className="perfil-apodo-tag">@{usuarioVisualizado.apodo}</p>
           <p className="perfil-meta-sub">
-            Miembro desde el {fechaMiembro} • ID: {usuarioActual.id || usuarioActual.id_usuario}
+            Miembro desde el {fechaMiembro} • ID: {usuarioVisualizado.id || usuarioVisualizado.id_usuario}
           </p>
           <p className="perfil-bio-preview">
-            {usuarioActual.biografia || 'Sin biografía escrita aún.'}
+            {usuarioVisualizado.biografia || 'Sin biografía escrita aún.'}
           </p>
         </div>
       </div>
 
-      {/* Navegacion por Pestanas */}
+      {/* Navegación por Pestañas */}
       <div className="perfil-tabs">
-        <button
-          className={`perfil-tab-btn ${pestanaActiva === 'datos' ? 'active' : ''}`}
-          onClick={() => setPestanaActiva('datos')}
-        >
-          Mis Datos Personales
-        </button>
+        {esPropioPerfil && (
+          <button
+            className={`perfil-tab-btn ${pestanaActiva === 'datos' ? 'active' : ''}`}
+            onClick={() => setPestanaActiva('datos')}
+          >
+            Mis Datos Personales
+          </button>
+        )}
 
         <button
           className={`perfil-tab-btn ${pestanaActiva === 'eventos' ? 'active' : ''}`}
           onClick={() => setPestanaActiva('eventos')}
         >
-          Mis Eventos Creados ({misEventos.length})
+          {esPropioPerfil ? 'Mis Eventos Creados' : 'Eventos Publicados'} ({misEventos.length})
         </button>
 
         <button
           className={`perfil-tab-btn ${pestanaActiva === 'inscripciones' ? 'active' : ''}`}
           onClick={() => setPestanaActiva('inscripciones')}
         >
-          Historial de Asistencias ({misInscripciones.length})
+          {esPropioPerfil ? 'Historial de Asistencias' : 'Asistencias'} ({misInscripciones.length})
         </button>
 
-        <button
-          className={`perfil-tab-btn ${pestanaActiva === 'ajustes' ? 'active' : ''}`}
-          onClick={() => setPestanaActiva('ajustes')}
-        >
-          Ajustes y Seguridad
-        </button>
+        {esPropioPerfil && (
+          <button
+            className={`perfil-tab-btn ${pestanaActiva === 'ajustes' ? 'active' : ''}`}
+            onClick={() => setPestanaActiva('ajustes')}
+          >
+            Ajustes y Seguridad
+          </button>
+        )}
       </div>
 
-      {/* Contenido de la Pestana: Datos Personales */}
-      {pestanaActiva === 'datos' && (
+      {/* Contenido de la Pestaña: Datos Personales (Solo para perfil propio) */}
+      {esPropioPerfil && pestanaActiva === 'datos' && (
         <div className="perfil-card">
           <div className="perfil-section-header">
             <h3>Información de tu Perfil</h3>
@@ -279,7 +348,7 @@ export const Perfil = () => {
           {mensajeExito && <div className="alert-box success">{mensajeExito}</div>}
           {mensajeError && <div className="alert-box error">{mensajeError}</div>}
 
-          {/* Componente para subir foto de perfil como archivo fisico */}
+          {/* Componente para subir foto de perfil como archivo físico */}
           <SubirFotoPerfil
             idUsuario={usuarioActual.id || usuarioActual.id_usuario}
             fotoActual={formulario.fotoPerfil}
@@ -368,27 +437,33 @@ export const Perfil = () => {
         </div>
       )}
 
-      {/* Contenido de la Pestana: Mis Eventos Creados */}
+      {/* Contenido de la Pestaña: Eventos Creados / Publicados */}
       {pestanaActiva === 'eventos' && (
         <div className="perfil-card">
           <div className="perfil-section-header">
-            <h3>Historial de Eventos Publicados</h3>
-            <p>Monitorea tus actividades pasadas y próximas. Tus eventos creados permanecen en tu historial aunque ya haya pasado su fecha.</p>
+            <h3>{esPropioPerfil ? 'Historial de Eventos Publicados' : `Eventos organizados por ${usuarioVisualizado.nombre}`}</h3>
+            <p>
+              {esPropioPerfil
+                ? 'Monitorea tus actividades pasadas y próximas. Tus eventos creados permanecen en tu historial aunque ya haya pasado su fecha.'
+                : 'Actividades que este usuario ha organizado en la plataforma.'}
+            </p>
           </div>
 
           {cargandoEventos && (
             <div className="state-box">
               <div className="spinner"></div>
-              <p>Cargando tus eventos...</p>
+              <p>Cargando eventos...</p>
             </div>
           )}
 
           {!cargandoEventos && misEventos.length === 0 && (
             <div className="state-box empty-box">
-              <p>Aún no has organizado ningún evento.</p>
-              <Link to="/crear-evento" className="btn-primary" style={{ marginTop: '1rem' }}>
-                Publicar mi primer evento
-              </Link>
+              <p>{esPropioPerfil ? 'Aún no has organizado ningún evento.' : 'Este usuario aún no ha organizado ningún evento.'}</p>
+              {esPropioPerfil && (
+                <Link to="/crear-evento" className="btn-primary" style={{ marginTop: '1rem' }}>
+                  Publicar mi primer evento
+                </Link>
+              )}
             </div>
           )}
 
@@ -417,7 +492,7 @@ export const Perfil = () => {
 
               {eventosCreadosMostrar.length === 0 ? (
                 <div className="state-box empty-box">
-                  <p>No tienes eventos registrados bajo este filtro.</p>
+                  <p>No hay eventos registrados bajo este filtro.</p>
                 </div>
               ) : (
                 <div className="eventos-grid">
@@ -431,27 +506,33 @@ export const Perfil = () => {
         </div>
       )}
 
-      {/* Contenido de la Pestana: Historial de Asistencias e Inscripciones */}
+      {/* Contenido de la Pestaña: Historial de Asistencias e Inscripciones */}
       {pestanaActiva === 'inscripciones' && (
         <div className="perfil-card">
           <div className="perfil-section-header">
-            <h3>Historial de Asistencias e Inscripciones</h3>
-            <p>Revisa todos los eventos en los que te has inscrito para participar en la comunidad.</p>
+            <h3>{esPropioPerfil ? 'Historial de Asistencias e Inscripciones' : `Inscripciones de ${usuarioVisualizado.nombre}`}</h3>
+            <p>
+              {esPropioPerfil
+                ? 'Revisa todos los eventos en los que te has inscrito para participar en la comunidad.'
+                : 'Eventos de la comunidad a los que este usuario asiste o ha asistido.'}
+            </p>
           </div>
 
           {cargandoInscripciones && (
             <div className="state-box">
               <div className="spinner"></div>
-              <p>Cargando tu historial de asistencias...</p>
+              <p>Cargando historial de asistencias...</p>
             </div>
           )}
 
           {!cargandoInscripciones && misInscripciones.length === 0 && (
             <div className="state-box empty-box">
-              <p>Aún no te has inscrito a ningún evento.</p>
-              <Link to="/" className="btn-primary" style={{ marginTop: '1rem' }}>
-                Explorar eventos disponibles
-              </Link>
+              <p>{esPropioPerfil ? 'Aún no te has inscrito a ningún evento.' : 'Este usuario no tiene inscripciones registradas.'}</p>
+              {esPropioPerfil && (
+                <Link to="/" className="btn-primary" style={{ marginTop: '1rem' }}>
+                  Explorar eventos disponibles
+                </Link>
+              )}
             </div>
           )}
 
@@ -480,7 +561,7 @@ export const Perfil = () => {
 
               {inscripcionesMostrar.length === 0 ? (
                 <div className="state-box empty-box">
-                  <p>No tienes asistencias registradas bajo este filtro.</p>
+                  <p>No hay asistencias registradas bajo este filtro.</p>
                 </div>
               ) : (
                 <div className="eventos-grid">
@@ -494,8 +575,8 @@ export const Perfil = () => {
         </div>
       )}
 
-      {/* Contenido de la Pestana: Ajustes y Seguridad (A futuro) */}
-      {pestanaActiva === 'ajustes' && (
+      {/* Contenido de la Pestaña: Ajustes y Seguridad (Solo para perfil propio) */}
+      {esPropioPerfil && pestanaActiva === 'ajustes' && (
         <div className="perfil-card">
           <div className="perfil-section-header">
             <h3>Ajustes de Cuenta y Seguridad</h3>
@@ -503,6 +584,18 @@ export const Perfil = () => {
           </div>
 
           <div className="ajustes-grid">
+            <div className="ajuste-card">
+              <h4>Sesión Activa</h4>
+              <p>Finalizar tu sesión en este dispositivo y volver a la pantalla de acceso.</p>
+              <button
+                onClick={manejarCerrarSesion}
+                className="btn-logout"
+                style={{ marginTop: '0.65rem' }}
+              >
+                Cerrar Sesión
+              </button>
+            </div>
+
             <div className="ajuste-card">
               <h4>Cambio de Contraseña</h4>
               <p>Configura una nueva contraseña segura para tu cuenta.</p>
@@ -536,4 +629,3 @@ export const Perfil = () => {
 // Alias de compatibilidad
 export const PerfilUsuario = Perfil;
 export default Perfil;
-

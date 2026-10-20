@@ -6,6 +6,8 @@ import RutaProtegida from './components/ProtectedRoute';
 import { PaginaPrincipal } from './pages/Home';
 import { DetalleEvento } from './pages/EventoDetalle';
 import { CrearEvento } from './pages/CrearEvento';
+import { EditarEvento } from './pages/EditarEvento';
+import { PaginaBuscar } from './pages/Buscar';
 import { Perfil } from './pages/Perfil';
 import Login from './pages/Login';
 
@@ -24,9 +26,12 @@ export default function App() {
               <Route element={<RutaProtegida />}>
                 <Route path="/" element={<PaginaPrincipal />} />
                 <Route path="/eventos" element={<PaginaPrincipal />} />
+                <Route path="/buscar" element={<PaginaBuscar />} />
                 <Route path="/eventos/:id" element={<DetalleEvento />} />
+                <Route path="/eventos/:id/editar" element={<EditarEvento />} />
                 <Route path="/crear-evento" element={<CrearEvento />} />
                 <Route path="/perfil" element={<Perfil />} />
+                <Route path="/perfil/:id" element={<Perfil />} />
               </Route>
 
               {/* Redirección por defecto */}
@@ -41,4 +46,3 @@ export default function App() {
     </ProveedorAutenticacion>
   );
 }
-

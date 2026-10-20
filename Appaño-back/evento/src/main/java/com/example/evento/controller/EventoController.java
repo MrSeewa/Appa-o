@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.evento.model.request.EventoActualizarReq;
 import com.example.evento.model.request.EventoRegistroReq;
 import com.example.evento.model.response.EventoDetalleRes;
 import com.example.evento.service.EventoService;
@@ -42,6 +44,14 @@ public class EventoController {
     @GetMapping("/{id}")
     public EventoDetalleRes obtenerEvento(@PathVariable Long id) {
         return eventoService.obtenerDetalleEvento(id);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EventoDetalleRes> actualizarEvento(
+            @PathVariable Long id,
+            @Valid @RequestBody EventoActualizarReq request) {
+        EventoDetalleRes eventoActualizado = eventoService.actualizarEvento(id, request);
+        return ResponseEntity.ok(eventoActualizado);
     }
 
     @PostMapping("/{id}/inscribir")

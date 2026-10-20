@@ -1,19 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAutenticacion } from '../context/AuthContext';
 
 export const BarraNavegacion = () => {
-  const { usuarioActual, usuariosDisponibles, cambiarUsuario, cerrarSesion } = useAutenticacion();
+  const { usuarioActual } = useAutenticacion();
   const ubicacion = useLocation();
   const navegar = useNavigate();
 
-  const manejarCerrarSesion = () => {
-    // 1. Destruimos la sesión local mediante el contexto
-    cerrarSesion();
+  const [textoBusqueda, setTextoBusqueda] = useState('');
 
-    // 2. Redirigimos al login limpiando el historial de navegación
-    navegar('/login', { replace: true });
+  const manejarEnvioBusqueda = (evento) => {
+    evento.preventDefault();
+    if (textoBusqueda.trim()) {
+      navegar(`/buscar?q=${encodeURIComponent(textoBusqueda.trim())}`);
+    } else {
+      navegar('/buscar');
+    }
   };
+
+  const inicialApodo = usuarioActual?.apodo
+    ? usuarioActual.apodo.charAt(0).toUpperCase()
+    : 'U';
 
   return (
     <nav className="navbar">
@@ -22,6 +29,22 @@ export const BarraNavegacion = () => {
           <span className="brand-text">Yo Appaño</span>
           <span className="brand-badge">metro</span>
         </Link>
+
+        {/* Formulario de Búsqueda Rápida en la Barra de Navegación */}
+        {usuarioActual && (
+          <form onSubmit={manejarEnvioBusqueda} className="nav-search-form">
+            <input
+              type="text"
+              placeholder="Buscar usuarios o eventos..."
+              value={textoBusqueda}
+              onChange={(e) => setTextoBusqueda(e.target.value)}
+              className="nav-search-input"
+            />
+            <button type="submit" className="nav-search-btn" title="Buscar">
+              Buscar
+            </button>
+          </form>
+        )}
 
         <div className="nav-links">
           <Link
@@ -34,60 +57,30 @@ export const BarraNavegacion = () => {
           >
             Explorar Eventos
           </Link>
-
-          {usuarioActual && (
-            <>
-              <Link
-                to="/crear-evento"
-                className={`nav-link ${
-                  ubicacion.pathname === '/crear-evento' ? 'active' : ''
-                }`}
-              >
-                + Publicar Evento
-              </Link>
-
-              <Link
-                to="/perfil"
-                className={`nav-link ${
-                  ubicacion.pathname === '/perfil' ? 'active' : ''
-                }`}
-              >
-                Mi Perfil
-              </Link>
-            </>
-          )}
         </div>
 
         {usuarioActual && (
           <div className="user-controls">
-            <div className="user-selector">
-              <label htmlFor="user-select">Sesión:</label>
-              <select
-                id="user-select"
-                value={usuarioActual.id || usuarioActual.id_usuario || ''}
-                onChange={(evento) => cambiarUsuario(evento.target.value)}
-              >
-                {usuariosDisponibles.map((usuario) => {
-                  const idUsuario = usuario.id || usuario.id_usuario;
-                  return (
-                    <option key={idUsuario} value={idUsuario}>
-                      {usuario.nombre} (@{usuario.apodo})
-                    </option>
-                  );
-                })}
-              </select>
-              {usuarioActual?.fotoPerfil && (
+            <Link
+              to="/perfil"
+              className={`nav-user-chip ${
+                ubicacion.pathname.startsWith('/perfil') ? 'active' : ''
+              }`}
+              title="Ver mi perfil"
+            >
+              {usuarioActual.fotoPerfil ? (
                 <img
                   src={usuarioActual.fotoPerfil}
                   alt={usuarioActual.apodo}
                   className="nav-avatar"
                 />
+              ) : (
+                <div className="nav-avatar-placeholder">
+                  {inicialApodo}
+                </div>
               )}
-            </div>
-
-            <button onClick={manejarCerrarSesion} className="btn-logout">
-              Cerrar Sesión
-            </button>
+              <span className="nav-user-name">@{usuarioActual.apodo || usuarioActual.nombre}</span>
+            </Link>
           </div>
         )}
       </div>
@@ -97,3 +90,4 @@ export const BarraNavegacion = () => {
 
 // Alias de compatibilidad
 export const Navbar = BarraNavegacion;
+export default BarraNavegacion;

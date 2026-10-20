@@ -19,6 +19,12 @@ export const servicioEvento = {
     return respuesta.data;
   },
 
+  // Modificar un evento existente (solo el creador)
+  actualizar: async (idEvento, datosActualizar) => {
+    const respuesta = await apiEvento.put(`/${idEvento}`, datosActualizar);
+    return respuesta.data;
+  },
+
   // Inscribir a un usuario en el evento
   inscribirUsuario: async (idEvento, idUsuario) => {
     const respuesta = await apiEvento.post(`/${idEvento}/inscribir?usuarioId=${idUsuario}`);

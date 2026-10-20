@@ -102,13 +102,27 @@ export const DetalleEvento = () => {
 
   const creador = evento.creador || {};
 
+  const idUsuarioActual = usuarioActual?.id || usuarioActual?.id_usuario;
+  const idCreadorEvento = evento.creadorId || creador.id || creador.id_usuario;
+  const esCreador =
+    idUsuarioActual &&
+    idCreadorEvento &&
+    Number(idUsuarioActual) === Number(idCreadorEvento);
+
   return (
     <div className="detalle-container">
       <div className="detalle-nav-top">
         <Link to="/" className="btn-back">
           ← Volver a los eventos
         </Link>
-        <span className="categoria-pill">{evento.categoria || 'General'}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <span className="categoria-pill">{evento.categoria || 'General'}</span>
+          {esCreador && (
+            <Link to={`/eventos/${evento.id}/editar`} className="btn-editar-evento">
+              Modificar Evento
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="detalle-card">
@@ -125,6 +139,14 @@ export const DetalleEvento = () => {
               {evento.cantidadInscritos} {evento.cantidadInscritos === 1 ? 'persona' : 'personas'}
             </span>
           </div>
+          {esCreador && (
+            <div className="stat-item">
+              <span className="stat-label">Tu rol</span>
+              <span className="stat-value" style={{ color: '#00f0ff', fontWeight: 800 }}>
+                Organizador del Evento
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="detalle-cuerpo">
@@ -193,3 +215,4 @@ export const DetalleEvento = () => {
 
 // Alias de compatibilidad
 export const EventoDetalle = DetalleEvento;
+export default DetalleEvento;

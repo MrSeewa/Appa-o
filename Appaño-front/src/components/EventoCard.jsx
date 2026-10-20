@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAutenticacion } from '../context/AuthContext';
 
-export const TarjetaEvento = ({ evento }) => {
+export const TarjetaEvento = ({ evento, puedeEditar }) => {
+  const { usuarioActual } = useAutenticacion();
+
   const fechaFormateada = evento.fechaEvento
     ? new Date(evento.fechaEvento).toLocaleDateString('es-CL', {
         weekday: 'short',
@@ -20,6 +23,10 @@ export const TarjetaEvento = ({ evento }) => {
   const esPasado = evento.fechaEvento
     ? new Date(evento.fechaEvento).getTime() < Date.now()
     : false;
+
+  const idUsuarioActual = usuarioActual?.id || usuarioActual?.id_usuario;
+  const idCreador = evento.creadorId || evento.creador?.id || evento.creador?.id_usuario;
+  const esMio = puedeEditar || (idUsuarioActual && idCreador && Number(idUsuarioActual) === Number(idCreador));
 
   return (
     <div className={`evento-card ${esPasado ? 'evento-pasado' : ''}`}>
@@ -66,9 +73,16 @@ export const TarjetaEvento = ({ evento }) => {
           <span className="creador-apodo">@{evento.creador?.apodo || 'anónimo'}</span>
         </div>
 
-        <Link to={`/eventos/${evento.id}`} className="btn-ver-detalle">
-          Ver detalles →
-        </Link>
+        <div className="card-acciones" style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
+          {esMio && (
+            <Link to={`/eventos/${evento.id}/editar`} className="btn-editar-mini">
+              Modificar
+            </Link>
+          )}
+          <Link to={`/eventos/${evento.id}`} className="btn-ver-detalle">
+            Ver detalles →
+          </Link>
+        </div>
       </div>
     </div>
   );

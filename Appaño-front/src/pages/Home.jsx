@@ -8,6 +8,7 @@ export const PaginaPrincipal = () => {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [categoriaFiltro, setCategoriaFiltro] = useState('TODAS');
+  const [busquedaTexto, setBusquedaTexto] = useState('');
 
   const cargarEventos = async () => {
     setCargando(true);
@@ -48,10 +49,17 @@ export const PaginaPrincipal = () => {
     ...Array.from(new Set(eventosVigentes.map((ev) => ev.categoria).filter(Boolean))),
   ];
 
-  const eventosFiltrados =
-    categoriaFiltro === 'TODAS'
-      ? eventosOrdenados
-      : eventosOrdenados.filter((ev) => ev.categoria === categoriaFiltro);
+  const eventosFiltrados = eventosOrdenados.filter((ev) => {
+    const coincideCategoria =
+      categoriaFiltro === 'TODAS' || ev.categoria === categoriaFiltro;
+    const coincideTexto =
+      !busquedaTexto.trim() ||
+      (ev.titulo &&
+        ev.titulo.toLowerCase().includes(busquedaTexto.trim().toLowerCase())) ||
+      (ev.descripcion &&
+        ev.descripcion.toLowerCase().includes(busquedaTexto.trim().toLowerCase()));
+    return coincideCategoria && coincideTexto;
+  });
 
   return (
     <div className="home-page">
@@ -61,9 +69,15 @@ export const PaginaPrincipal = () => {
           Explora actividades, deportes, música, videojuegos y talleres.
           Únete a eventos en tiempo real o publica el tuyo en segundos.
         </p>
+        <p>
+          Atrévete, quizás encuentres tu próxima pasión o hagas nuevos amigos.
+        </p>
         <div className="hero-actions">
           <Link to="/crear-evento" className="btn-primary">
-            + Publicar un Evento
+            + Publica tu Evento
+          </Link>
+          <Link to="/buscar" className="btn-secundario-metro">
+            Buscar Eventos y Usuarios
           </Link>
         </div>
       </header>
@@ -71,6 +85,9 @@ export const PaginaPrincipal = () => {
       <section className="eventos-section">
         <div className="section-header">
           <h2>Próximos Eventos Disponibles</h2>
+        </div>
+
+        <div className="eventos-toolbar">
           <div className="filtro-categorias">
             {categoriasDisponibles.map((categoria) => (
               <button
@@ -81,6 +98,26 @@ export const PaginaPrincipal = () => {
                 {categoria}
               </button>
             ))}
+          </div>
+
+          <div className="home-search-inline">
+            <input
+              type="text"
+              placeholder="Filtrar eventos por nombre..."
+              value={busquedaTexto}
+              onChange={(e) => setBusquedaTexto(e.target.value)}
+              className="input-search-home"
+            />
+            {busquedaTexto && (
+              <button
+                type="button"
+                onClick={() => setBusquedaTexto('')}
+                className="btn-clear-home-search"
+                title="Limpiar búsqueda"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
 
@@ -102,7 +139,11 @@ export const PaginaPrincipal = () => {
 
         {!cargando && !error && eventosFiltrados.length === 0 && (
           <div className="state-box empty-box">
-            <p>No se encontraron eventos en esta categoría.</p>
+            <p>
+              {busquedaTexto
+                ? `No se encontraron eventos vigentes con el nombre "${busquedaTexto}".`
+                : 'No se encontraron eventos en esta categoría.'}
+            </p>
             <Link to="/crear-evento" className="btn-primary">
               Sé el primero en publicar uno
             </Link>
@@ -123,3 +164,4 @@ export const PaginaPrincipal = () => {
 
 // Alias de compatibilidad
 export const Home = PaginaPrincipal;
+export default PaginaPrincipal;
